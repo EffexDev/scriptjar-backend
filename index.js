@@ -5,13 +5,18 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
+
 app.use(cors({
-    origin: 'https://scriptjar.jordancartledge.com.au',
-    methods: 'GET,POST',
-    allowedHeaders: 'Content-Type'
+    origin: 'https://scriptjar.jordancartledge.com.au',  // Frontend domain
+    methods: 'GET,POST',  // Allowed methods
+    allowedHeaders: 'Content-Type',  // Allowed headers for the request
+    credentials: true,  // Allow cookies (optional)
+    preflightContinue: false,  // Make sure the OPTIONS request is handled
 }));
 
+app.options('*', cors());
 
+// POST endpoint for doubling the number
 app.post('/double', (req, res) => {
     const { number } = req.body;
     
@@ -23,6 +28,7 @@ app.post('/double', (req, res) => {
     res.json({ result: doubled });
 });
 
+// Start server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
