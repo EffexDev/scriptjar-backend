@@ -5,7 +5,12 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: 'https://scriptjar.jordancartledge.com.au',
+    methods: 'GET,POST',
+    allowedHeaders: 'Content-Type'
+}));
+
 
 app.post('/double', (req, res) => {
     const { number } = req.body;
