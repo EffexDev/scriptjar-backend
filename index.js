@@ -1,34 +1,61 @@
 const express = require('express');
-const cors = require('cors');
-
+const mongoose = require('mongoose');
 const app = express();
-const PORT = process.env.PORT || 3000;
+
+// Replace with your MongoDB URI
+const mongoURI = 'mongodb+srv://effexdev:Fxz4574896523@templates-db.irtpw.mongodb.net/?retryWrites=true&w=majority&appName=templates-db';
+
+mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.log(err));
 
 app.use(express.json());
 
-app.use(cors({
-    origin: 'https://scriptjar.jordancartledge.com.au',  // Frontend domain
-    methods: 'GET,POST',  // Allowed methods
-    allowedHeaders: 'Content-Type',  // Allowed headers for the request
-    credentials: true,  // Allow cookies (optional)
-    preflightContinue: false,  // Make sure the OPTIONS request is handled
+// Models (for each collection)
+const Department = mongoose.model('Department', new mongoose.Schema({
+  name: String
 }));
 
-app.options('*', cors());
+const Group = mongoose.model('Group', new mongoose.Schema({
+  departments_id: mongoose.Schema.Types.ObjectId,
+  name: String
+}));
 
-// POST endpoint for doubling the number
-app.post('/double', (req, res) => {
-    const { number } = req.body;
+const Set = mongoose.model('Set', new mongoose.Schema({
+  groups_id: mongoose.Schema.Types.ObjectId,
+  name: String
+}));
+
+const Template = mongoose.model('Template', new mongoose.Schema({
+  sets_id: mongoose.Schema.Types.ObjectId,
+  template_name: String,
+  content: String
+}));
+
+// API to get templates based on Department, Group, and Set
+app.get('/templates', async (req, res) => {
+  try {
+    const { departmentId, groupId, setId } = req.query;
     
-    if (typeof number !== 'number') {
-        return res.status(400).json({ error: 'Invalid input. Please send a number.' });
+    // Validate inputs
+    if (!departmentId || !groupId || !setId) {
+      return res.status(400).json({ error: 'Missing required parameters' });
     }
-    
-    const doubled = number * 2;
-    res.json({ result: doubled });
+
+    // Find templates based on the given Set ID
+    const templates = await Template.find({ sets_id: setId });
+
+    if (templates.length === 0) {
+      return res.status(404).json({ message: 'No templates found' });
+    }
+
+    return res.json(templates);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Server error' });
+  }
 });
 
 // Start server
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+const port = process.env.PORT || 5000;
+app.listen(port, () => console.log(`Server running on port ${port}`));
