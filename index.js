@@ -1,15 +1,20 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors'); // Import CORS middleware
+
 const app = express();
 
 // Replace with your MongoDB URI
-const mongoURI = 'mongodb+srv://effexdev:Fxz4574896523@templates-db.irtpw.mongodb.net/?retryWrites=true&w=majority&appName=templates-db';
+const mongoURI = 'mongodb://<your-mongo-uri>';
 
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.log(err));
 
 app.use(express.json());
+
+// Use CORS middleware to allow cross-origin requests
+app.use(cors());  // Allow all origins by default
 
 // Models (for each collection)
 const Department = mongoose.model('Department', new mongoose.Schema({
