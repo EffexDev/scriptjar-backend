@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import express from "express";
 import admin from "firebase-admin";
 
@@ -35,3 +36,27 @@ app.post("/set-admin", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+=======
+const express = require('express');
+const cors = require('cors');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
+app.use(cors());
+
+app.post('/double', (req, res) => {
+
+    const { number } = req.body;
+    if (typeof number !== 'number') {
+        return res.status(400).json({ error: 'Invalid input. Please send a number.' });
+    }
+
+    const doubled = number * 2;
+    res.json({ result: doubled });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+>>>>>>> 983e6c16d308270352bc2016c16ba85fab4a5f1d
