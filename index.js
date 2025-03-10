@@ -1,5 +1,6 @@
-const express = require('express');
-const cors = require('cors');
+import express from "express";
+import admin from "firebase-admin";
+
 const app = express();
 app.use(express.json()); // Middleware to parse JSON body
 
@@ -10,17 +11,27 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-app.post('/double', (req, res) => {
+/**
+ * Sets an admin claim for a user based on email.
+ */
+app.post("/set-admin", async (req, res) => {
+  const { email } = req.body;
 
-    const { number } = req.body;
-    if (typeof number !== 'number') {
-        return res.status(400).json({ error: 'Invalid input. Please send a number.' });
-    }
+  if (!email) {
+    return res.status(400).json({ error: "Email is required." });
+  }
 
-    const doubled = number * 2;
-    res.json({ result: doubled });
+  try {
+    // Fetch user by email
+    const user = await admin.auth().getUserByEmail(email);
+    await admin.auth().setCustomUserClaims(user.uid, { admin: true });
+
+    return res.json({ message: `✅ User ${email} is now an admin.` });
+  } catch (error) {
+    console.error("❌ Error setting admin role:", error);
+    return res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
