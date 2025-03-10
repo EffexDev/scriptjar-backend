@@ -38,5 +38,30 @@ app.post("/set-admin", async (req, res) => {
   }
 });
 
+/**
+ * Removes the admin claim for a user based on email.
+ */
+app.delete("/remove-admin", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: "Email is required." });
+  }
+
+  try {
+    // Fetch user by email
+    const user = await admin.auth().getUserByEmail(email);
+
+    // Remove the 'admin' custom claim by setting it to an empty object or null
+    await admin.auth().setCustomUserClaims(user.uid, {});
+
+    return res.json({ message: `✅ User ${email} is no longer an admin.` });
+  } catch (error) {
+    console.error("❌ Error removing admin role:", error);
+    return res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
