@@ -1,7 +1,12 @@
 const express = require("express");
 const admin = require("firebase-admin");
+const cors = require("cors");
 
 const app = express();
+
+// Use CORS middleware to allow requests from other origins
+app.use(cors()); // Allows all origins by default
+
 app.use(express.json()); // Middleware to parse JSON body
 
 // Parse the Firebase service account JSON from an environment variable
