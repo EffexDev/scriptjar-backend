@@ -1,66 +1,37 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors'); // Import CORS middleware
+import express from "express";
+import admin from "firebase-admin";
 
 const app = express();
+app.use(express.json()); // Middleware to parse JSON body
 
-// Replace with your MongoDB URI
-const mongoURI = 'mongodb://<your-mongo-uri>';
+// Parse the Firebase service account JSON from an environment variable
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
-mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log(err));
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
-app.use(express.json());
+/**
+ * Sets an admin claim for a user based on email.
+ */
+app.post("/set-admin", async (req, res) => {
+  const { email } = req.body;
 
-// Use CORS middleware to allow cross-origin requests
-app.use(cors());  // Allow all origins by default
+  if (!email) {
+    return res.status(400).json({ error: "Email is required." });
+  }
 
-// Models (for each collection)
-const Department = mongoose.model('Department', new mongoose.Schema({
-  name: String
-}));
-
-const Group = mongoose.model('Group', new mongoose.Schema({
-  departments_id: mongoose.Schema.Types.ObjectId,
-  name: String
-}));
-
-const Set = mongoose.model('Set', new mongoose.Schema({
-  groups_id: mongoose.Schema.Types.ObjectId,
-  name: String
-}));
-
-const Template = mongoose.model('Template', new mongoose.Schema({
-  sets_id: mongoose.Schema.Types.ObjectId,
-  template_name: String,
-  content: String
-}));
-
-// API to get templates based on Department, Group, and Set
-app.get('/templates', async (req, res) => {
   try {
-    const { departmentId, groupId, setId } = req.query;
-    
-    // Validate inputs
-    if (!departmentId || !groupId || !setId) {
-      return res.status(400).json({ error: 'Missing required parameters' });
-    }
+    // Fetch user by email
+    const user = await admin.auth().getUserByEmail(email);
+    await admin.auth().setCustomUserClaims(user.uid, { admin: true });
 
-    // Find templates based on the given Set ID
-    const templates = await Template.find({ sets_id: setId });
-
-    if (templates.length === 0) {
-      return res.status(404).json({ message: 'No templates found' });
-    }
-
-    return res.json(templates);
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Server error' });
+    return res.json({ message: `✅ User ${email} is now an admin.` });
+  } catch (error) {
+    console.error("❌ Error setting admin role:", error);
+    return res.status(500).json({ error: "Internal Server Error", details: error.message });
   }
 });
 
-// Start server
-const port = process.env.PORT || 5000;
-app.listen(port, () => console.log(`Server running on port ${port}`));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
