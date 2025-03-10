@@ -1,5 +1,5 @@
-import express from "express";
-import admin from "firebase-admin";
+const express = require("express");
+const admin = require("firebase-admin");
 
 const app = express();
 app.use(express.json()); // Middleware to parse JSON body
